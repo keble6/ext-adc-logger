@@ -60,6 +60,6 @@ writeCONFIG(configValue)
 loops.everyInterval(1000, function () {
     busy = true
     while (busy) {
-        busy = readCONVERSION() % 32768
+        busy = BitwiseLogic.bitwise2arg(readCONVERSION(), operator.rightShift, 15) == 1
     }
 })
