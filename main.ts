@@ -6,10 +6,13 @@ function setPointer (num: number) {
     false
     )
 }
-// CONFIG Bit fields: 15 = OS 14:12 = MUX 11:9 = PGA 8 = MODE
-function readCONVERSION () {
+// Read 2 bytes from either CONVERSION (Pointer = 0) or CONFIG (Pointer = 1)
+function read () {
     return pins.i2cReadNumber(ADCaddress, NumberFormat.UInt16BE, false)
 }
+// Send:
+// * 1 byte to set Pointer to CONFIG address (01)
+// * then 2 bytes of configValue
 function startConversion (num: number) {
     // Write CONFIG reg address
     pins.i2cWriteNumber(
@@ -32,8 +35,8 @@ let configValue = 0
 let CONFIG = 0
 let ADCaddress = 0
 let CONVERSION = 0
-// slave address
-ADCaddress = 144
+// slave address 0b1001000
+ADCaddress = 72
 // Register 0
 // Register 1
 CONFIG = 1
@@ -58,9 +61,9 @@ loops.everyInterval(1000, function () {
     busy = true
     // Read status until conversion done
     while (busy) {
-        busy = BitwiseLogic.bitwise2arg(readCONVERSION(), operator.rightShift, 15) == 1
+        busy = BitwiseLogic.bitwise2arg(read(), operator.rightShift, 15) == 1
     }
     // Set pointer to read result
     setPointer(0)
-    result = readCONVERSION()
+    result = read()
 })
