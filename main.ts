@@ -14,11 +14,14 @@ function read () {
 // * 1 byte to set Pointer to CONFIG address (01)
 // * then 2 bytes of configValue
 function startConversion (num: number) {
+    serial.writeLine("ADCaddress =" + ADCaddress)
+    serial.writeLine("CONFIG = " + CONFIG)
+    serial.writeLine("ConfigValue = " + configValue)
     // Write CONFIG reg address
     pins.i2cWriteNumber(
     ADCaddress,
     CONFIG,
-    NumberFormat.UInt8LE,
+    NumberFormat.Int8LE,
     true
     )
     // Write num to CONFIG reg
@@ -30,6 +33,7 @@ function startConversion (num: number) {
     )
 }
 let result = 0
+let temp = 0
 let busy = false
 let configValue = 0
 let CONFIG = 0
@@ -55,15 +59,24 @@ configValue = BitwiseLogic.bitwise2arg(configValue, operator.or, BitwiseLogic.bi
 configValue = BitwiseLogic.bitwise2arg(configValue, operator.or, BitwiseLogic.bitwise2arg(PGA, operator.leftShift, 9))
 configValue = BitwiseLogic.bitwise2arg(configValue, operator.or, BitwiseLogic.bitwise2arg(MODE, operator.leftShift, 8))
 configValue = BitwiseLogic.bitwise2arg(configValue, operator.or, BitwiseLogic.bitwise2arg(DIS, operator.leftShift, 0))
-loops.everyInterval(1000, function () {
+loops.everyInterval(10000, function () {
+    serial.writeLine("configValue = " + configValue)
     // Start ADC conversion (OS => 1)
     startConversion(configValue)
+    serial.writeLine("ReadConfigValue = " + read())
     busy = true
     // Read status until conversion done
     while (busy) {
-        busy = BitwiseLogic.bitwise2arg(read(), operator.rightShift, 15) == 1
+        temp = read()
+        busy = BitwiseLogic.bitwise2arg(temp, operator.rightShift, 15) == 0
+        serial.writeLine("Read config = " + temp)
     }
     // Set pointer to read result
     setPointer(0)
     result = read()
+    serial.writeLine("Read data = " + result)
+    // Show top 8 bits
+    result = BitwiseLogic.bitwise2arg(result, operator.and, 65280)
+    result = BitwiseLogic.bitwise2arg(result, operator.rightShift, 8)
+    basic.showNumber(result)
 })
