@@ -13,32 +13,42 @@ function read () {
 // Send:
 // * 1 byte to set Pointer to CONFIG address (01)
 // * then 2 bytes of configValue
+// serial.writeLine("ADCaddress =" + ADCaddress)
+// serial.writeLine("CONFIG = " + CONFIG)
+// serial.writeLine("ConfigValue = " + configValue)
+// // Write CONFIG reg address
+// pins.i2cWriteNumber(
+// ADCaddress,
+// CONFIG,
+// NumberFormat.Int8LE,
+// true
+// )
+// // Write num to CONFIG reg
+// pins.i2cWriteNumber(
+// ADCaddress,
+// configValue,
+// NumberFormat.UInt16BE,
+// false
+// )
 function startConversion (num: number) {
-    serial.writeLine("ADCaddress =" + ADCaddress)
-    serial.writeLine("CONFIG = " + CONFIG)
-    serial.writeLine("ConfigValue = " + configValue)
-    // Write CONFIG reg address
     pins.i2cWriteNumber(
     ADCaddress,
     CONFIG,
-    NumberFormat.Int8LE,
-    true
-    )
-    // Write num to CONFIG reg
-    pins.i2cWriteNumber(
-    ADCaddress,
-    configValue,
-    NumberFormat.UInt16BE,
+    NumberFormat.UInt8BE,
     false
     )
+    let buf = pins.createBuffer(2);
+buf[0] = configValue & 0xff
+    buf[1] = configValue >> 8
+    pins.i2cWriteBuffer(ADCaddress, buf);
 }
 let result = 0
 let temp = 0
 let busy = false
-let configValue = 0
 let CONFIG = 0
-let ADCaddress = 0
 let CONVERSION = 0
+let ADCaddress = 0
+let configValue = 0
 // slave address 0b1001000
 ADCaddress = 72
 // Register 0
